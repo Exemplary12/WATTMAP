@@ -29,15 +29,6 @@ Every key value used in the calculations is adjustable, including:
 - Panel wattage, voltage, and current ratings
 - Performance ratio and oversize factor
 
-## Hosting it as a website
-
-Since it's a single HTML file, you can deploy it for free:
-
-- **Netlify** — drag and drop the file at netlify.com for an instant live URL
-- **GitHub Pages** — upload as `index.html` to a repo and enable Pages in settings
-- **Vercel** — similar drag-and-drop deployment
-
-Optionally connect a custom domain (e.g. via Whogohost or DomainKing) once hosted.
 
 ## Notes
 
