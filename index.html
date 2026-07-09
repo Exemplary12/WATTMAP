@@ -3,7 +3,1368 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WATTMAP — Nigeria Solar Load Calculator</title><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WATTMAP — Nigeria Solar Load Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d12;--surface:#111620;--surface2:#181e2d;
+  --border:#1e2840;--accent:#f5a623;--accent2:#e85d2f;
+  --green:#2edd8e;--red:#ff4c4c;--blue:#5b8af5;--purple:#c97af5;
+  --text:#e8eaf0;--muted:#5a6480;--card:#141926;
+  --header-bg:rgba(10,13,18,.97);
+}
+body.light{
+  --bg:#f4f6fa;--surface:#ffffff;--surface2:#eef0f6;
+  --border:#d5daea;--accent:#d4880a;--accent2:#c44a1f;
+  --green:#18a864;--red:#d93025;--blue:#3b6fd4;--purple:#9b4dd4;
+  --text:#0f1420;--muted:#7a849e;--card:#ffffff;
+  --header-bg:rgba(244,246,250,.97);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;transition:background .25s,color .25s;}
+
+/* THEME TOGGLE BUTTON */
+.theme-toggle{
+  display:flex;align-items:center;gap:7px;
+  padding:6px 13px;border-radius:100px;
+  border:1px solid var(--border);
+  background:var(--surface2);
+  cursor:pointer;font-size:12px;font-weight:500;
+  color:var(--muted);transition:all .2s;
+  font-family:'DM Sans',sans-serif;
+  white-space:nowrap;
+}
+.theme-toggle:hover{border-color:var(--accent);color:var(--accent);}
+.theme-toggle-icon{font-size:14px;}
+
+/* PROGRESS */
+.progress-bar{height:2px;background:var(--border);position:fixed;top:0;left:0;right:0;z-index:300;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease;}
+
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;padding:15px 36px;border-bottom:1px solid var(--border);background:var(--header-bg);backdrop-filter:blur(14px);position:sticky;top:0;z-index:200;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--accent);}
+.logo span{color:var(--text);}
+.logo sub{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-left:4px;}
+.steps{display:flex;align-items:center;}
+.step-item{display:flex;align-items:center;gap:6px;padding:5px 12px;cursor:pointer;transition:all .2s;border-radius:4px;font-size:12px;font-weight:500;color:var(--muted);}
+.step-item.active{color:var(--accent);}
+.step-item.done{color:var(--green);}
+.step-num{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;}
+.step-item.active .step-num{background:var(--accent);border-color:var(--accent);color:#000;}
+.step-item.done .step-num{background:var(--green);border-color:var(--green);color:#000;}
+.step-div{width:22px;height:1px;background:var(--border);}
+
+/* SCREENS */
+.screen{display:none;animation:fadeUp .3s ease;}
+.screen.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* TYPOGRAPHY */
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:12px;}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:2px;line-height:1;}
+.sec-title span{color:var(--accent);}
+.field-label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-family:'JetBrains Mono',monospace;}
+
+/* INPUTS */
+input[type=number],input[type=text],select,textarea{
+  background:var(--surface2);border:1px solid var(--border);border-radius:7px;
+  padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;
+  font-size:13px;outline:none;transition:border-color .2s;width:100%;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+select option{background:var(--surface2);}
+input[type=range]{width:100%;accent-color:var(--accent);background:none;border:none;padding:6px 0;cursor:pointer;}
+
+/* BUTTONS */
+.btn{padding:10px 24px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .18s;letter-spacing:.3px;}
+.btn-primary{background:var(--accent);color:#000;}
+.btn-primary:hover{background:#f9b940;transform:translateY(-1px);}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-lg{padding:13px 34px;font-size:14px;}
+.btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:26px;}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:22px;}
+.card-sm{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;}
+
+/* FORMULA BOX — key visual */
+.formula-box{
+  background:rgba(245,166,35,.06);
+  border:1px solid rgba(245,166,35,.25);
+  border-radius:10px;
+  padding:14px 18px;
+  margin:10px 0;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;
+  line-height:1.8;
+  color:var(--text);
+}
+.formula-box .f-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+.formula-box .f-eq{color:var(--accent);font-weight:700;font-size:13px;}
+.formula-box .f-note{color:var(--muted);font-size:10px;margin-top:4px;}
+
+/* METRIC CARDS */
+.metric-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:22px;position:relative;overflow:hidden;}
+.metric-card::after{content:'';position:absolute;bottom:0;right:0;width:60px;height:60px;border-radius:50%;background:var(--accent);opacity:.04;transform:translate(15px,15px);}
+.metric-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:7px;}
+.metric-val{font-family:'Bebas Neue',sans-serif;font-size:42px;line-height:1;letter-spacing:2px;color:var(--accent);}
+.metric-val.green{color:var(--green);}
+.metric-val.red{color:var(--red);}
+.metric-val.blue{color:var(--blue);}
+.metric-val.purple{color:var(--purple);}
+.metric-unit{font-size:11px;color:var(--muted);margin-top:3px;}
+.metric-formula{font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(245,166,35,.5);margin-top:6px;line-height:1.5;}
+
+/* STAT BAND */
+.stat-band{display:grid;gap:0;background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:20px;}
+.stat-cell{padding:20px 18px;border-right:1px solid var(--border);}
+.stat-cell:last-child{border-right:none;}
+.stat-cell-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:5px;}
+.stat-cell-val{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--accent);letter-spacing:2px;line-height:1;}
+.stat-cell-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.stat-cell-formula{font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(245,166,35,.4);margin-top:4px;}
+
+/* BAR CHART */
+.bar-chart{display:flex;flex-direction:column;gap:8px;}
+.bar-row{display:flex;align-items:center;gap:9px;}
+.bar-label{font-size:11px;color:var(--muted);width:100px;flex-shrink:0;}
+.bar-track{flex:1;height:6px;background:var(--surface2);border-radius:100px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:100px;transition:width .8s cubic-bezier(.16,1,.3,1);}
+.bar-pct{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);width:30px;text-align:right;}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{text-align:left;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace;padding:0 0 10px;border-bottom:1px solid var(--border);}
+.tbl td{padding:9px 0;font-size:12px;border-bottom:1px solid rgba(30,40,64,.5);vertical-align:top;}
+.tbl td.mono{font-family:'JetBrains Mono',monospace;color:var(--accent);}
+.tbl tr:last-child td{border-bottom:none;}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:100px;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;}
+.badge-series{background:rgba(232,93,47,.14);color:var(--accent2);border:1px solid rgba(232,93,47,.28);}
+.badge-parallel{background:rgba(46,221,142,.1);color:var(--green);border:1px solid rgba(46,221,142,.28);}
+.badge-sp{background:rgba(91,138,245,.1);color:var(--blue);border:1px solid rgba(91,138,245,.28);}
+
+/* SECTION TITLE */
+.rec-section{margin-bottom:28px;}
+.rec-section-title{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+
+/* INVERTER CARDS */
+.inv-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.inv-card{background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all .18s;text-align:center;}
+.inv-card.selected,.inv-card:hover{border-color:var(--accent);background:rgba(245,166,35,.06);}
+.inv-card-icon{font-size:22px;margin-bottom:6px;}
+.inv-card-name{font-size:12px;font-weight:600;margin-bottom:3px;}
+.inv-card-desc{font-size:10px;color:var(--muted);line-height:1.4;}
+
+/* BATTERY SECTION */
+.batt-controls{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+.batt-results{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;}
+.batt-cell-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:4px;}
+.batt-cell-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--green);}
+.batt-cell-val.orange{color:var(--accent);}
+.batt-cell-val.blue{color:var(--blue);}
+
+/* PANEL INPUTS */
+.panel-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+
+/* CABLE TABLE */
+.cable-tbl th,.cable-tbl td{padding:8px 6px;}
+.cable-tbl th{font-size:9px;}
+.cable-tbl td{font-size:11px;}
+.cable-tbl .hl td{background:rgba(245,166,35,.04);}
+
+/* TIPS */
+.tip{display:flex;align-items:flex-start;gap:11px;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:9px;font-size:12px;line-height:1.5;margin-bottom:8px;}
+.tip-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.tip strong{color:var(--text);display:block;margin-bottom:1px;font-size:13px;}
+.tip span{color:var(--muted);}
+
+/* APPLIANCE CARDS */
+.ap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:11px;margin-bottom:24px;}
+.ap-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.ap-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);transform:scaleX(0);transition:transform .2s;transform-origin:left;}
+.ap-card.selected{border-color:var(--accent);background:rgba(245,166,35,.05);}
+.ap-card.selected::before{transform:scaleX(1);}
+.ap-card:hover{border-color:rgba(245,166,35,.35);}
+.ap-icon{font-size:24px;margin-bottom:7px;}
+.ap-name{font-size:12px;font-weight:600;margin-bottom:2px;}
+.ap-w{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);}
+.ap-w-rated{font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.ap-controls{display:none;margin-top:11px;padding-top:11px;border-top:1px solid var(--border);}
+.ap-card.selected .ap-controls{display:block;}
+.ap-row{display:flex;gap:6px;margin-bottom:6px;}
+.ap-row>div{flex:1;}
+.ap-mini{padding:5px 7px;font-size:11px;border-radius:6px;}
+.ctag{display:inline-block;background:rgba(91,138,245,.14);color:var(--blue);border-radius:3px;font-size:9px;padding:1px 5px;font-family:'JetBrains Mono',monospace;margin-left:3px;vertical-align:middle;}
+
+/* CUSTOM ADD ROW */
+.custom-row{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;padding:14px 16px;background:var(--card);border:1px dashed var(--border);border-radius:11px;margin-bottom:20px;}
+.custom-row>div{flex:1;min-width:90px;}
+.custom-row .btn{flex-shrink:0;padding:8px 14px;font-size:12px;align-self:flex-end;}
+
+/* SIDEBAR */
+.sidebar{position:sticky;top:70px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;}
+.sb-title{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+.sb-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.sb-row:last-of-type{border:none;}
+.sb-val{font-family:'JetBrains Mono',monospace;color:var(--accent);font-size:12px;font-weight:700;}
+.sb-big{margin-top:12px;padding:13px;background:var(--surface2);border-radius:9px;text-align:center;}
+.sb-big-label{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.sb-big-val{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--accent);letter-spacing:2px;line-height:1;}
+.sb-big-unit{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* TABS */
+.tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px;}
+.tab{padding:5px 13px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;transition:all .18s;}
+.tab.active,.tab:hover{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600;}
+
+/* DOD SLIDER DISPLAY */
+.dod-row{display:flex;gap:12px;align-items:flex-end;}
+.dod-row>div:first-child{flex:1;}
+.dod-pill{padding:8px 14px;background:rgba(46,221,142,.07);border:1px solid rgba(46,221,142,.2);border-radius:8px;min-width:160px;}
+.dod-pill-label{font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:3px;}
+.dod-pill-val{font-size:13px;color:var(--green);font-weight:600;}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+
+/* WRAP */
+.wrap{max-width:1160px;margin:0 auto;padding:40px 36px;}
+.wrap-sm{max-width:980px;margin:0 auto;padding:40px 36px;}
+
+/* SETUP */
+.s1-wrap{max-width:900px;margin:0 auto;padding:64px 36px 36px;}
+.s1-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,7vw,86px);line-height:.92;letter-spacing:2px;margin-bottom:18px;}
+.s1-title em{color:var(--accent);font-style:normal;}
+.s1-sub{font-size:14px;color:var(--muted);line-height:1.65;max-width:480px;margin-bottom:44px;font-weight:300;}
+.setup-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:32px;}
+.setup-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:18px;transition:border-color .2s;}
+.setup-card:hover{border-color:rgba(245,166,35,.35);}
+
+/* S2 LAYOUT */
+.s2-layout{display:grid;grid-template-columns:1fr 272px;gap:20px;align-items:start;}
+
+/* REC HERO */
+.rec-hero{display:flex;align-items:center;gap:24px;margin-bottom:28px;padding:32px;background:var(--card);border:1px solid var(--border);border-radius:18px;position:relative;overflow:hidden;}
+.rec-hero::before{content:'';position:absolute;top:0;right:0;width:240px;height:240px;background:radial-gradient(circle,rgba(245,166,35,.07) 0%,transparent 70%);}
+.rec-icon{font-size:56px;flex-shrink:0;}
+.rec-headline{font-family:'Bebas Neue',sans-serif;font-size:40px;line-height:1;letter-spacing:2px;margin-bottom:6px;}
+.rec-sub{font-size:13px;color:var(--muted);line-height:1.6;font-weight:300;}
+
+@media(max-width:700px){
+  .header{padding:12px 16px;}
+  .step-item span{display:none;}
+  .s1-wrap,.wrap,.wrap-sm{padding:28px 16px;}
+  .setup-grid,.g2,.g3,.g4,.batt-controls,.batt-results,.panel-controls{grid-template-columns:1fr;}
+  .s2-layout{grid-template-columns:1fr;}
+  .sidebar{position:static;}
+  .stat-band{grid-template-columns:1fr !important;}
+  .stat-cell{border-right:none;border-bottom:1px solid var(--border);}
+  .stat-cell:last-child{border-bottom:none;}
+  .inv-cards{grid-template-columns:1fr;}
+  .rec-hero{flex-direction:column;text-align:center;}
+  .dod-row{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+<div class="progress-bar"><div class="progress-fill" id="pBar" style="width:25%"></div></div>
+
+<header class="header">
+  <div class="logo">WATT<span>MAP</span><sub>NG</sub></div>
+  <nav class="steps">
+    <div class="step-item active" id="step1" onclick="goTo(1)"><div class="step-num">1</div><span>Setup</span></div>
+    <div class="step-div"></div>
+    <div class="step-item" id="step2" onclick="goTo(2)"><div class="step-num">2</div><span>Appliances</span></div>
+    <div class="step-div"></div>
+    <div class="step-item" id="step3" onclick="goTo(3)"><div class="step-num">3</div><span>Analysis</span></div>
+    <div class="step-div"></div>
+    <div class="step-item" id="step4" onclick="goTo(4)"><div class="step-num">4</div><span>Results</span></div>
+  </nav>
+  <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+    <span class="theme-toggle-icon">🌙</span><span id="themeLabel">Dark</span>
+  </button>
+</header>
+
+<!-- ═══════════════════════════ SCREEN 1: SETUP ═══════════════════════════ -->
+<div class="screen active" id="screen1">
+<div class="s1-wrap">
+  <p class="eyebrow">// Solar Load Calculator · Nigeria</p>
+  <h1 class="s1-title">KNOW YOUR<br><em>POWER</em><br>DEMAND</h1>
+  <p class="s1-sub">Calculates Consumer Energy Demand (CED), battery bank sizing, panel array, inverter sizing, and cable sizes for Nigerian solar installations.</p>
+
+  <div class="setup-grid">
+    <div class="setup-card">
+      <label class="field-label">Property Type</label>
+      <select id="propType">
+        <option>Apartment / Flat</option><option>Duplex / Bungalow</option>
+        <option>Detached House</option><option>Office / Commercial</option>
+      </select>
+    </div>
+    <div class="setup-card">
+      <label class="field-label">Number of Rooms</label>
+      <input type="number" id="numRooms" value="3" min="1" max="30">
+    </div>
+    <div class="setup-card">
+      <label class="field-label">AC Supply Voltage</label>
+      <select id="acVolt">
+        <option value="220">220V (Nigeria standard)</option>
+        <option value="230">230V (EU / UK)</option>
+        <option value="110">110V (USA / Canada)</option>
+      </select>
+    </div>
+    <div class="setup-card">
+      <label class="field-label">Days of Autonomy (DoA)</label>
+      <select id="doa">
+        <option value="1" selected>1 day (typical)</option>
+        <option value="2">2 days</option>
+        <option value="3">3 days</option>
+      </select>
+    </div>
+    <div class="setup-card">
+      <label class="field-label">Peak Sun Hours (PSH)</label>
+      <select id="pshRegion" onchange="applyPshPreset()" style="margin-bottom:8px">
+        <option value="4">4 hrs — Coastal / Overcast</option>
+        <option value="4.5" selected>4.5 hrs — Southern Nigeria avg</option>
+        <option value="5">5 hrs — Central Nigeria</option>
+        <option value="5.5">5.5 hrs — Middle Belt</option>
+        <option value="6">6 hrs — Northern Nigeria</option>
+        <option value="6.5">6.5 hrs — Far North / Sahel</option>
+        <option value="custom">Custom value…</option>
+      </select>
+      <input type="number" id="psh" value="4.5" min="1" max="10" step="0.1"
+        oninput="document.getElementById('pshRegion').value='custom'">
+    </div>
+    <div class="setup-card">
+      <label class="field-label">Oversize Factor (for CED)</label>
+      <select id="oversizeFactor">
+        <option value="1.2" selected>1.2× (Standard default)</option>
+        <option value="1.25">1.25× (Slightly conservative)</option>
+        <option value="1.3">1.3× (Conservative)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="f-title">// Formulas Used in This Calculator</div>
+    <div><span class="f-eq">CED</span> = (Output Energy / 0.9) + Inverter Standby Consumption</div>
+    <div><span class="f-eq">Inverter Standby</span> = Total Power × Oversize Factor × 24 × 0.02</div>
+    <div><span class="f-eq">Battery Capacity (Ah)</span> = (CED × DoA) ÷ (System Voltage × DoD)</div>
+    <div><span class="f-eq">Panel Energy</span> = CED ÷ Performance Ratio (PR = 0.65)</div>
+    <div><span class="f-eq">Panel Power</span> = Panel Energy ÷ PSH</div>
+    <div><span class="f-eq">No. of Panels</span> = Panel Power ÷ Panel Watt Rating</div>
+  </div>
+
+  <div class="btn-row" style="justify-content:flex-start;margin-top:28px">
+    <button class="btn btn-primary btn-lg" onclick="goTo(2)">Add Appliances →</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════ SCREEN 2: APPLIANCES ═══════════════════════════ -->
+<div class="screen" id="screen2">
+<div class="wrap">
+  <div style="margin-bottom:18px">
+    <h2 class="sec-title">YOUR <span>APPLIANCES</span></h2>
+    <p style="color:var(--muted);font-size:12px;margin-top:4px">Select appliances. Adjust quantity, daily hours, and actual wattage per unit.</p>
+  </div>
+  <div class="s2-layout">
+    <div>
+      <div class="tabs" id="catTabs">
+        <button class="tab active" onclick="filterCat('all',this)">All</button>
+        <button class="tab" onclick="filterCat('cooling',this)">Cooling</button>
+        <button class="tab" onclick="filterCat('kitchen',this)">Kitchen</button>
+        <button class="tab" onclick="filterCat('lighting',this)">Lighting</button>
+        <button class="tab" onclick="filterCat('entertainment',this)">Entertainment</button>
+        <button class="tab" onclick="filterCat('office',this)">Office</button>
+        <button class="tab" onclick="filterCat('laundry',this)">Laundry</button>
+        <button class="tab" onclick="filterCat('custom',this)">⭐ Custom</button>
+      </div>
+      <div class="ap-grid" id="apGrid"></div>
+
+      <!-- Add custom appliance -->
+      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:10px;">─── Add Custom Appliance</div>
+      <div class="custom-row">
+        <div><label class="field-label">Name</label><input type="text" id="cName" placeholder="e.g. Water Heater"></div>
+        <div><label class="field-label">Icon</label><input type="text" id="cIcon" placeholder="🔌" style="width:60px"></div>
+        <div><label class="field-label">Watts (W)</label><input type="number" id="cWatts" placeholder="e.g. 1500" min="1"></div>
+        <div><label class="field-label">Surge (W)</label><input type="number" id="cSurge" placeholder="e.g. 3000" min="1"></div>
+        <div><label class="field-label">Category</label>
+          <select id="cCat">
+            <option value="custom">Custom</option><option value="cooling">Cooling</option>
+            <option value="kitchen">Kitchen</option><option value="lighting">Lighting</option>
+            <option value="entertainment">Entertainment</option><option value="office">Office</option>
+            <option value="laundry">Laundry</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="addCustom()">+ Add</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="goTo(1)">← Back</button>
+        <button class="btn btn-primary" onclick="goTo(3)">Analyse →</button>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sb-title">// Live Load Summary</div>
+      <div class="sb-row"><span>Items selected</span><span class="sb-val" id="sbCount">0</span></div>
+      <div class="sb-row"><span>Running load</span><span class="sb-val" id="sbW">0 W</span></div>
+      <div class="sb-row"><span>Peak surge</span><span class="sb-val" id="sbPeak">0 W</span></div>
+      <div class="sb-row"><span>Output energy</span><span class="sb-val" id="sbKwh">0.0 kWh</span></div>
+      <div class="sb-row"><span>Inv. standby</span><span class="sb-val" id="sbStandby">0.0 kWh</span></div>
+      <div class="sb-big">
+        <div class="sb-big-label">CED (Consumer Energy Demand)</div>
+        <div class="sb-big-val" id="sbCed">0.0</div>
+        <div class="sb-big-unit">kWh/day</div>
+      </div>
+      <div style="margin-top:10px;font-size:9px;color:var(--muted);text-align:center;line-height:1.6;font-family:'JetBrains Mono',monospace;">
+        CED = (Output ÷ 0.9)<br>+ Standby Consumption
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════ SCREEN 3: ANALYSIS ═══════════════════════════ -->
+<div class="screen" id="screen3">
+<div class="wrap-sm">
+  <h2 class="sec-title" style="margin-bottom:6px">LOAD <span>ANALYSIS</span></h2>
+  <p style="color:var(--muted);font-size:12px;margin-bottom:26px">Detailed breakdown of your electrical demand.</p>
+
+  <!-- Key metrics -->
+  <div class="g4" style="margin-bottom:18px">
+    <div class="metric-card">
+      <div class="metric-label">// Output Energy (kWh)</div>
+      <div class="metric-val" id="a-output">0.0</div>
+      <div class="metric-unit">kWh/day</div>
+      <div class="metric-formula">Σ (W × qty × hrs) ÷ 1000</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">// Inverter Standby (kWh)</div>
+      <div class="metric-val blue" id="a-standby">0.0</div>
+      <div class="metric-unit">kWh/day</div>
+      <div class="metric-formula">P_total × OSF × 24 × 0.02 ÷ 1000</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">// CED (kWh/day)</div>
+      <div class="metric-val green" id="a-ced">0.0</div>
+      <div class="metric-unit">Consumer Energy Demand</div>
+      <div class="metric-formula">(Output ÷ 0.9) + Standby</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">// Peak Surge Load</div>
+      <div class="metric-val red" id="a-peak">0</div>
+      <div class="metric-unit">Watts (startup peak)</div>
+      <div class="metric-formula">Σ (Surge W × qty)</div>
+    </div>
+  </div>
+
+  <!-- CED formula callout -->
+  <div class="formula-box" style="margin-bottom:18px">
+    <div class="f-title">// CED Calculation Breakdown</div>
+    <div>Inverter Input Energy = <span class="f-eq" id="f-inv-input">—</span> kWh &nbsp;(Output Energy ÷ 0.9 inverter efficiency)</div>
+    <div>Inverter Standby Consumption = <span class="f-eq" id="f-standby">—</span> kWh &nbsp;(Total Power × <span id="f-osf">1.2</span>× × 24h × 0.02)</div>
+    <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(245,166,35,.2)">
+      <b>CED = <span id="f-ced-eq">—</span> + <span id="f-ced-eq2">—</span> = <span class="f-eq" id="f-ced-total">—</span> kWh/day</b>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;opacity:.6;margin-bottom:16px">Category Breakdown</div>
+    <div class="bar-chart" id="barChart"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;opacity:.6;margin-bottom:14px">Appliance Detail</div>
+    <table class="tbl">
+      <thead><tr><th>Appliance</th><th>Qty</th><th>Rated W</th><th>Actual W</th><th>Hrs/Day</th><th>kWh/Day</th></tr></thead>
+      <tbody id="detailBody"></tbody>
+    </table>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goTo(2)">← Back</button>
+    <button class="btn btn-primary" onclick="goTo(4)">Get System Sizing →</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════ SCREEN 4: RESULTS ═══════════════════════════ -->
+<div class="screen" id="screen4">
+<div class="wrap-sm">
+
+  <div class="rec-hero">
+    <div class="rec-icon">⚡</div>
+    <div>
+      <p class="eyebrow" style="margin-bottom:6px">// Solar System Sizing Report</p>
+      <h2 class="rec-headline" id="r-headline">SYSTEM READY</h2>
+      <p class="rec-sub" id="r-sub">—</p>
+    </div>
+  </div>
+
+  <!-- TOP STAT BAND: Inverter | Breaker | MPPT -->
+  <div class="stat-band" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
+    <div class="stat-cell">
+      <div class="stat-cell-label">Inverter Size (VA)</div>
+      <div class="stat-cell-val" id="r-inv-va">—</div>
+      <div class="stat-cell-sub" id="r-inv-label">Min. recommended</div>
+      <div class="stat-cell-formula">Peak Surge × 1.25</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-cell-label">Main Circuit Breaker</div>
+      <div class="stat-cell-val" id="r-breaker">—</div>
+      <div class="stat-cell-sub">Amps (A)</div>
+      <div class="stat-cell-formula">I = P ÷ V × 1.25 safety</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-cell-label">MPPT Controller</div>
+      <div class="stat-cell-val" id="r-mppt">—</div>
+      <div class="stat-cell-sub">Minimum current (A)</div>
+      <div class="stat-cell-formula">I_parallel × Isc × 1.25</div>
+    </div>
+  </div>
+
+  <!-- §01 INVERTER TYPE -->
+  <div class="rec-section">
+    <div class="rec-section-title">01 — Inverter Type Selection</div>
+    <div class="inv-cards">
+      <div class="inv-card" id="inv-pure" onclick="selInv('pure')">
+        <div class="inv-card-icon">🔋</div>
+        <div class="inv-card-name">Pure Sine Wave</div>
+        <div class="inv-card-desc">For all appliances incl. AC motors, pumps, sensitive electronics.</div>
+      </div>
+      <div class="inv-card" id="inv-modified" onclick="selInv('modified')">
+        <div class="inv-card-icon">⚡</div>
+        <div class="inv-card-name">Modified Sine Wave</div>
+        <div class="inv-card-desc">Budget option. Resistive loads only (bulbs, fans). Not for AC, fridge.</div>
+      </div>
+      <div class="inv-card" id="inv-hybrid" onclick="selInv('hybrid')">
+        <div class="inv-card-icon">☀️</div>
+        <div class="inv-card-name">Hybrid Inverter</div>
+        <div class="inv-card-desc">Solar + battery + grid in one unit. Built-in MPPT. Best for NG homes.</div>
+      </div>
+    </div>
+    <div class="card-sm" id="inv-detail">
+      <div style="font-size:12px;color:var(--muted)" id="inv-detail-text">Select inverter type above.</div>
+    </div>
+  </div>
+
+  <!-- CED FORMULA CALLOUT FOR RESULTS -->
+  <div class="rec-section">
+    <div class="rec-section-title">// CED Used for Battery & Panel Sizing</div>
+    <div class="formula-box">
+      <div class="f-title">CED Formula</div>
+      <div>CED = (Output Energy ÷ 0.9) + (Total Power × OSF × 24 × 0.02)</div>
+      <div style="margin-top:6px"><span class="f-eq">CED = <span id="r-ced-display">—</span> kWh/day</span></div>
+      <div class="f-note">DoA = <span id="r-doa-display">1</span> day | All battery and panel calculations below use this CED value.</div>
+    </div>
+  </div>
+
+  <!-- §02 BATTERY BANK -->
+  <div class="rec-section">
+    <div class="rec-section-title">02 — Battery Bank Sizing</div>
+    <div class="formula-box" style="margin-bottom:14px">
+      <div class="f-title">Battery Capacity Formula</div>
+      <div><span class="f-eq">Battery Capacity (Ah)</span> = (CED × DoA) ÷ (System Voltage × DoD)</div>
+      <div class="f-note">DoA = Days of Autonomy (usually 1) | DoD = Depth of Discharge</div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <div class="batt-controls">
+        <div>
+          <label class="field-label">Battery Type</label>
+          <select id="battType" onchange="updateBattery()">
+            <option value="lead">Lead-Acid (Flooded) — DoD 50%</option>
+            <option value="agm">AGM (Sealed) — DoD 60%</option>
+            <option value="gel">Gel — DoD 60%</option>
+            <option value="lithium">Lithium LiFePO₄ — DoD 90%</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">System Voltage (V)</label>
+          <select id="battVPreset" onchange="applyBattVPreset()" style="margin-bottom:8px">
+            <option value="12">12V</option>
+            <option value="24" selected>24V</option>
+            <option value="48">48V</option>
+            <option value="custom">Custom value…</option>
+          </select>
+          <input type="number" id="battV" value="24" min="6" max="120" step="1"
+            oninput="document.getElementById('battVPreset').value='custom';updateBattery()">
+        </div>
+        <div>
+          <label class="field-label">Battery Unit Size (Ah)</label>
+          <select id="battUnitAhPreset" onchange="applyBattUnitAhPreset()" style="margin-bottom:8px">
+            <option value="50">50 Ah</option><option value="100">100 Ah</option>
+            <option value="150">150 Ah</option><option value="200" selected>200 Ah</option>
+            <option value="250">250 Ah</option><option value="300">300 Ah</option>
+            <option value="custom">Custom value…</option>
+          </select>
+          <input type="number" id="battUnitAh" value="200" min="1" max="2000" step="1"
+            oninput="document.getElementById('battUnitAhPreset').value='custom';updateBattery()">
+        </div>
+      </div>
+
+      <div class="dod-row" style="margin-bottom:14px">
+        <div>
+          <label class="field-label">Depth of Discharge — DoD (<span id="dodPct">50</span>%)</label>
+          <input type="range" id="dodSlider" min="20" max="95" value="50" step="5"
+            oninput="document.getElementById('dodPct').textContent=this.value;updateBattery()">
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace"><span>20%</span><span>95%</span></div>
+        </div>
+        <div class="dod-pill">
+          <div class="dod-pill-label">Recommended DoD</div>
+          <div class="dod-pill-val" id="dodRec">50% — Lead-Acid</div>
+        </div>
+      </div>
+
+      <!-- Battery results -->
+      <div class="batt-results">
+        <div>
+          <div class="batt-cell-label">Ah Required</div>
+          <div class="batt-cell-val orange" id="r-ah-req">—</div>
+          <div style="font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px">(CED×DoA)÷(V×DoD)</div>
+        </div>
+        <div>
+          <div class="batt-cell-label">No. of Batteries</div>
+          <div class="batt-cell-val" id="r-batt-n">—</div>
+          <div style="font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px">units required</div>
+        </div>
+        <div>
+          <div class="batt-cell-label">Usable Capacity</div>
+          <div class="batt-cell-val blue" id="r-batt-usable">—</div>
+          <div style="font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px">kWh usable</div>
+        </div>
+        <div>
+          <div class="batt-cell-label">Backup Duration</div>
+          <div class="batt-cell-val" id="r-batt-hrs">—</div>
+          <div style="font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px">hours estimated</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border)">
+        <span style="font-size:11px;color:var(--muted)">Connection:</span>
+        <span class="badge badge-parallel" id="r-batt-conn">—</span>
+        <span style="font-size:11px;color:var(--muted);flex:1" id="r-batt-conn-note">—</span>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.65" id="r-batt-detail">—</div>
+    </div>
+  </div>
+
+  <!-- §03 SOLAR PANELS -->
+  <div class="rec-section">
+    <div class="rec-section-title">03 — Solar Panel Array Sizing</div>
+    <div class="formula-box" style="margin-bottom:14px">
+      <div class="f-title">Panel Sizing Formula</div>
+      <div><span class="f-eq">Panel Energy (kWh)</span> = CED ÷ PR &nbsp;&nbsp; [PR = Performance Ratio, default 0.65]</div>
+      <div><span class="f-eq">Panel Power (kW)</span> = Panel Energy ÷ PSH &nbsp;&nbsp; [PSH = Peak Sun Hours]</div>
+      <div><span class="f-eq">No. of Panels</span> = Panel Power (W) ÷ Panel Watt Rating</div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <div class="panel-controls">
+        <div>
+          <label class="field-label">Panel Watt Rating (W)</label>
+          <input type="number" id="panelW" value="400" min="50" max="800" step="10" oninput="updateSolar()">
+        </div>
+        <div>
+          <label class="field-label">Performance Ratio (PR)</label>
+          <select id="pr" onchange="updateSolar()">
+            <option value="0.65" selected>0.65 — Standard default (65%)</option>
+            <option value="0.70">0.70 — Good installation (70%)</option>
+            <option value="0.75">0.75 — Premium system (75%)</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Panel Voc (V)</label>
+          <input type="number" id="panelVoc" value="41" min="18" max="65" step="0.5" oninput="updateSolar()">
+        </div>
+        <div>
+          <label class="field-label">Panel Isc (A)</label>
+          <input type="number" id="panelIsc" value="11" min="3" max="25" step="0.5" oninput="updateSolar()">
+        </div>
+      </div>
+
+      <div class="stat-band" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px">
+        <div class="stat-cell">
+          <div class="stat-cell-label">Panel Energy</div>
+          <div class="stat-cell-val" id="r-panel-energy">—</div>
+          <div class="stat-cell-sub">kWh (CED ÷ PR)</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-label">Panel Power Needed</div>
+          <div class="stat-cell-val" id="r-panel-power">—</div>
+          <div class="stat-cell-sub">W (Panel Energy ÷ PSH)</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-label">No. of Panels</div>
+          <div class="stat-cell-val" style="color:var(--green)" id="r-panel-n">—</div>
+          <div class="stat-cell-sub" id="r-panel-w-label">@ — W each</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-label">Array Connection</div>
+          <div class="stat-cell-val" style="font-size:18px;padding-top:4px" id="r-panel-conn">—</div>
+          <div class="stat-cell-sub" id="r-panel-conn-sub">—</div>
+        </div>
+      </div>
+
+      <div class="formula-box" style="margin-top:0" id="r-solar-detail">—</div>
+    </div>
+  </div>
+
+  <!-- §04 CABLE SIZING -->
+  <div class="rec-section">
+    <div class="rec-section-title">04 — Cable Sizing (IEC 60228 / NEC Copper)</div>
+    <div class="card" style="margin-bottom:0">
+      <table class="tbl cable-tbl">
+        <thead>
+          <tr>
+            <th>Circuit</th>
+            <th>Current (A)</th>
+            <th>CSA (mm²)</th>
+            <th>Diameter (Ø mm)</th>
+            <th>Standard / Note</th>
+          </tr>
+        </thead>
+        <tbody id="cableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- §05 TIPS -->
+  <div class="rec-section">
+    <div class="rec-section-title">05 — Nigeria-Specific Installation Tips</div>
+    <div id="tipList"></div>
+  </div>
+
+  <div class="btn-row" style="justify-content:space-between;margin-top:28px">
+    <button class="btn btn-ghost" onclick="goTo(3)">← Back</button>
+    <button class="btn btn-primary btn-lg" onclick="restartCalc()">🔄 New Calculation</button>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════════════ JAVASCRIPT ════════════════════════════ -->
+<script>
+// ─────────────────────────────────────────────────────────────────────────
+// APPLIANCE DATABASE
+// ─────────────────────────────────────────────────────────────────────────
+const BASE_AP = [
+  // COOLING
+  {id:'ac1',   name:'AC — 1HP (Inverter)',    icon:'❄️', watts:650,  surge:1950, cat:'cooling',       dHrs:8},
+  {id:'ac2',   name:'AC — 1.5HP (Inverter)',  icon:'❄️', watts:1050, surge:3150, cat:'cooling',       dHrs:8},
+  {id:'ac3',   name:'AC — 2HP (Fixed Speed)', icon:'❄️', watts:1800, surge:5400, cat:'cooling',       dHrs:6},
+  {id:'fan1',  name:'Ceiling Fan',            icon:'🌀', watts:75,   surge:150,  cat:'cooling',       dHrs:12},
+  {id:'fan2',  name:'Standing Fan',           icon:'💨', watts:60,   surge:100,  cat:'cooling',       dHrs:10},
+  // KITCHEN
+  {id:'ref1',  name:'Fridge (150–200L)',      icon:'🧊', watts:150,  surge:600,  cat:'kitchen',       dHrs:24},
+  {id:'ref2',  name:'Freezer (300L)',         icon:'❄️', watts:250,  surge:800,  cat:'kitchen',       dHrs:24},
+  {id:'mw1',   name:'Microwave Oven',         icon:'📡', watts:1200, surge:1200, cat:'kitchen',       dHrs:0.5},
+  {id:'el1',   name:'Electric Cooker (2-ring)',icon:'🍳',watts:2000, surge:2000, cat:'kitchen',       dHrs:2},
+  {id:'ket1',  name:'Electric Kettle',        icon:'🫖', watts:2000, surge:2000, cat:'kitchen',       dHrs:0.5},
+  {id:'blend1',name:'Blender',               icon:'🥤', watts:400,  surge:600,  cat:'kitchen',       dHrs:0.3},
+  // LIGHTING
+  {id:'led9',  name:'LED Bulb 9W',           icon:'💡', watts:9,    surge:9,    cat:'lighting',      dHrs:8},
+  {id:'led15', name:'LED Bulb 15W',          icon:'💡', watts:15,   surge:15,   cat:'lighting',      dHrs:8},
+  {id:'fl36',  name:'Fluorescent 36W',       icon:'🔆', watts:36,   surge:72,   cat:'lighting',      dHrs:8},
+  {id:'spot20',name:'Spotlight / Downlight', icon:'🔦', watts:20,   surge:20,   cat:'lighting',      dHrs:6},
+  // ENTERTAINMENT
+  {id:'tv43',  name:'LED TV 43″',            icon:'📺', watts:80,   surge:80,   cat:'entertainment', dHrs:6},
+  {id:'tv65',  name:'Smart TV 65″',          icon:'🖥', watts:130,  surge:130,  cat:'entertainment', dHrs:6},
+  {id:'dstv',  name:'Decoder / DSTV',        icon:'📡', watts:30,   surge:30,   cat:'entertainment', dHrs:8},
+  {id:'sound', name:'Sound System',          icon:'🔊', watts:200,  surge:400,  cat:'entertainment', dHrs:4},
+  // OFFICE
+  {id:'pc1',   name:'Desktop Computer',      icon:'🖥️', watts:250,  surge:300,  cat:'office',        dHrs:8},
+  {id:'lap1',  name:'Laptop',               icon:'💻', watts:65,   surge:80,   cat:'office',        dHrs:8},
+  {id:'print1',name:'Laser Printer',        icon:'🖨️', watts:500,  surge:600,  cat:'office',        dHrs:1},
+  {id:'wifi1', name:'WiFi Router',          icon:'📶', watts:15,   surge:15,   cat:'office',        dHrs:24},
+  // LAUNDRY / UTILITIES
+  {id:'wash1', name:'Washing Machine',      icon:'🫧', watts:500,  surge:1500, cat:'laundry',       dHrs:2},
+  {id:'iron1', name:'Electric Iron',        icon:'♨️', watts:1000, surge:1000, cat:'laundry',       dHrs:1},
+  {id:'pump05',name:'Water Pump 0.5HP',     icon:'💧', watts:373,  surge:1119, cat:'laundry',       dHrs:2},
+  {id:'pump1', name:'Water Pump 1HP',       icon:'💧', watts:750,  surge:2250, cat:'laundry',       dHrs:2},
+];
+
+let APPLIANCES = [...BASE_AP];
+let selAp = {};   // id → { qty, hrs, customWatts }
+let selInvType = 'hybrid';
+let customCtr = 0;
+
+// ─────────────────────────────────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────────────────────────────────
+function goTo(n) {
+  if(n===3) buildAnalysis();
+  if(n===4) buildResults();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen'+n).classList.add('active');
+  document.querySelectorAll('.step-item').forEach((el,i)=>{
+    el.classList.remove('active','done');
+    if(i+1===n) el.classList.add('active');
+    else if(i+1<n) el.classList.add('done');
+  });
+  document.getElementById('pBar').style.width=(n*25)+'%';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// CORE FORMULAS
+// ─────────────────────────────────────────────────────────────────────────
+function getEffW(id) {
+  const ap = APPLIANCES.find(a=>a.id===id);
+  const s = selAp[id];
+  return (s && s.customWatts!=null) ? (s.customWatts||ap.watts) : ap.watts;
+}
+
+function calcLoad() {
+  let totalW=0, peakW=0, outputKwh=0;
+  for(const [id,v] of Object.entries(selAp)) {
+    const ap = APPLIANCES.find(a=>a.id===id);
+    const eff = getEffW(id);
+    totalW += eff * v.qty;
+    peakW  += ap.surge * v.qty;
+    outputKwh += (eff * v.qty * (v.hrs||0)) / 1000;
+  }
+
+  // Inverter Standby Consumption = Total Power × Oversize Factor × 24 × 0.02
+  const osf = parseFloat(document.getElementById('oversizeFactor').value)||1.2;
+  const standbyKwh = (totalW * osf * 24 * 0.02) / 1000;
+
+  // CED = (Output Energy / 0.9) + Inverter Standby Consumption
+  const invInputKwh = outputKwh / 0.9;
+  const ced = invInputKwh + standbyKwh;
+
+  return {totalW, peakW, outputKwh, standbyKwh, invInputKwh, ced, osf};
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// APPLIANCE RENDERING
+// ─────────────────────────────────────────────────────────────────────────
+function renderAp(cat) {
+  const list = cat==='all' ? APPLIANCES : APPLIANCES.filter(a=>a.cat===cat);
+  document.getElementById('apGrid').innerHTML = list.map(ap=>{
+    const s = selAp[ap.id];
+    const qty = s ? s.qty : 1;
+    const hrs = s ? s.hrs : ap.dHrs;
+    const cW  = s && s.customWatts!=null ? s.customWatts : ap.watts;
+    return `
+    <div class="ap-card ${s?'selected':''}" id="card-${ap.id}" onclick="toggleAp('${ap.id}')">
+      <div class="ap-icon">${ap.icon}</div>
+      <div class="ap-name">${ap.name}${ap.isCustom?'<span class="ctag">custom</span>':''}</div>
+      <div class="ap-w">${cW}W active</div>
+      <div class="ap-w-rated">Rated: ${ap.watts}W</div>
+      <div class="ap-controls" onclick="event.stopPropagation()">
+        <div class="ap-row">
+          <div><label class="field-label">Qty</label>
+            <input class="ap-mini" type="number" min="1" max="30" value="${qty}"
+              oninput="updAp('${ap.id}','qty',this.value)"></div>
+          <div><label class="field-label">Hrs/Day</label>
+            <input class="ap-mini" type="number" min="0" max="24" step="0.5" value="${hrs}"
+              oninput="updAp('${ap.id}','hrs',this.value)"></div>
+        </div>
+        <div><label class="field-label" style="margin-top:4px">Actual Wattage (W) — rated: ${ap.watts}W</label>
+          <input class="ap-mini" type="number" min="1" max="50000" value="${cW}" style="width:100%"
+            oninput="updAp('${ap.id}','customWatts',this.value)"></div>
+        ${ap.isCustom?`<button onclick="removeCustom('${ap.id}')"
+          style="margin-top:8px;width:100%;padding:4px 0;font-size:10px;background:rgba(255,76,76,.1);
+          color:var(--red);border:1px solid rgba(255,76,76,.2);border-radius:5px;cursor:pointer">🗑 Remove</button>`:''}
+      </div>
+    </div>`;
+  }).join('') || '<p style="color:var(--muted);font-size:12px;padding:16px 0">No appliances in this category.</p>';
+}
+
+function filterCat(cat,btn) {
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAp(cat);
+}
+
+function toggleAp(id) {
+  if(selAp[id]) { delete selAp[id]; }
+  else { const ap=APPLIANCES.find(a=>a.id===id); selAp[id]={qty:1,hrs:ap.dHrs,customWatts:ap.watts}; }
+  document.getElementById('card-'+id).classList.toggle('selected');
+  updateSidebar();
+}
+
+function updAp(id,field,val) {
+  if(!selAp[id]) { const ap=APPLIANCES.find(a=>a.id===id); selAp[id]={qty:1,hrs:ap.dHrs,customWatts:ap.watts}; }
+  selAp[id][field] = parseFloat(val)||0;
+  if(field==='customWatts') {
+    const c=document.getElementById('card-'+id);
+    if(c) c.querySelector('.ap-w').textContent=(parseFloat(val)||0)+'W active';
+  }
+  updateSidebar();
+}
+
+function addCustom() {
+  const name=document.getElementById('cName').value.trim();
+  const icon=document.getElementById('cIcon').value.trim()||'🔌';
+  const watts=parseFloat(document.getElementById('cWatts').value)||100;
+  const surge=parseFloat(document.getElementById('cSurge').value)||watts*2;
+  const cat=document.getElementById('cCat').value;
+  if(!name){alert('Please enter an appliance name.');return;}
+  customCtr++;
+  APPLIANCES.push({id:'c'+customCtr,name,icon,watts,surge,cat,dHrs:2,isCustom:true});
+  ['cName','cIcon','cWatts','cSurge'].forEach(id=>document.getElementById(id).value='');
+  renderAp('all');
+  document.querySelector('.tab.active').click();
+}
+
+function removeCustom(id) {
+  APPLIANCES=APPLIANCES.filter(a=>a.id!==id);
+  delete selAp[id];
+  updateSidebar();
+  renderAp('all');
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// SIDEBAR (live CED)
+// ─────────────────────────────────────────────────────────────────────────
+function updateSidebar() {
+  const {totalW,peakW,outputKwh,standbyKwh,ced} = calcLoad();
+  const cnt = Object.keys(selAp).length;
+  document.getElementById('sbCount').textContent = cnt;
+  document.getElementById('sbW').textContent = totalW.toLocaleString()+' W';
+  document.getElementById('sbPeak').textContent = peakW.toLocaleString()+' W';
+  document.getElementById('sbKwh').textContent = outputKwh.toFixed(2)+' kWh';
+  document.getElementById('sbStandby').textContent = standbyKwh.toFixed(2)+' kWh';
+  document.getElementById('sbCed').textContent = ced.toFixed(2);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// SCREEN 3: ANALYSIS
+// ─────────────────────────────────────────────────────────────────────────
+function buildAnalysis() {
+  const {totalW,peakW,outputKwh,standbyKwh,invInputKwh,ced,osf} = calcLoad();
+
+  document.getElementById('a-output').textContent  = outputKwh.toFixed(2);
+  document.getElementById('a-standby').textContent = standbyKwh.toFixed(3);
+  document.getElementById('a-ced').textContent     = ced.toFixed(2);
+  document.getElementById('a-peak').textContent    = peakW.toLocaleString();
+
+  // Formula callout
+  document.getElementById('f-inv-input').textContent = invInputKwh.toFixed(3);
+  document.getElementById('f-standby').textContent   = standbyKwh.toFixed(3);
+  document.getElementById('f-osf').textContent       = osf;
+  document.getElementById('f-ced-eq').textContent    = invInputKwh.toFixed(3);
+  document.getElementById('f-ced-eq2').textContent   = standbyKwh.toFixed(3);
+  document.getElementById('f-ced-total').textContent = ced.toFixed(3);
+
+  // Bar chart
+  const cats={cooling:'Cooling',kitchen:'Kitchen',lighting:'Lighting',entertainment:'Entertainment',office:'Office',laundry:'Laundry',custom:'Custom'};
+  const catW={};
+  for(const [id,v] of Object.entries(selAp)) {
+    const ap=APPLIANCES.find(a=>a.id===id);
+    const eff=getEffW(id);
+    catW[ap.cat]=(catW[ap.cat]||0)+eff*v.qty;
+  }
+  const cols=['#f5a623','#2edd8e','#e85d2f','#5b8af5','#d95ce8','#38d9d9','#ff4c4c'];
+  const entries=Object.entries(catW).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('barChart').innerHTML = entries.length
+    ? entries.map(([cat,w],i)=>{
+        const pct=totalW?Math.round(w/totalW*100):0;
+        return `<div class="bar-row">
+          <span class="bar-label">${cats[cat]||cat}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${cols[i%cols.length]}"></div></div>
+          <span class="bar-pct">${pct}%</span>
+        </div>`;
+      }).join('')
+    : '<p style="color:var(--muted);font-size:12px">No appliances selected.</p>';
+
+  // Detail table
+  const tbody=document.getElementById('detailBody');
+  tbody.innerHTML='';
+  for(const [id,v] of Object.entries(selAp)) {
+    const ap=APPLIANCES.find(a=>a.id===id);
+    const eff=getEffW(id);
+    const kwh=(eff*v.qty*(v.hrs||0)/1000).toFixed(3);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${ap.icon} ${ap.name}${ap.isCustom?'<span class="ctag">custom</span>':''}</td>
+      <td>${v.qty}</td>
+      <td class="mono">${ap.watts}W</td>
+      <td class="mono">${eff}W${eff!==ap.watts?' <span style="color:var(--muted);font-size:9px">(edited)</span>':''}</td>
+      <td>${v.hrs}h</td>
+      <td class="mono">${kwh}</td>`;
+    tbody.appendChild(tr);
+  }
+  if(!Object.keys(selAp).length)
+    tbody.innerHTML='<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:18px">No appliances selected.</td></tr>';
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// SCREEN 4: RESULTS
+// ─────────────────────────────────────────────────────────────────────────
+function buildResults() {
+  const {totalW,peakW,outputKwh,standbyKwh,invInputKwh,ced,osf} = calcLoad();
+  const acVolt = parseInt(document.getElementById('acVolt').value)||220;
+  const doa    = parseInt(document.getElementById('doa').value)||1;
+  const psh    = parseFloat(document.getElementById('psh').value)||4.5;
+
+  // Inverter VA: Peak Surge × 1.25
+  const invVA = Math.ceil(peakW*1.25/100)*100;
+  document.getElementById('r-inv-va').textContent = invVA.toLocaleString()+' VA';
+
+  // Breaker: I = P/V × 1.25 safety factor, rounded up to standard size
+  const acCurrent = totalW/acVolt;
+  const BREAKERS=[6,10,16,20,25,32,40,50,63,80,100,125];
+  const breaker = BREAKERS.find(b=>b>=acCurrent*1.25)||125;
+  document.getElementById('r-breaker').textContent = breaker+'A';
+
+  // CED display
+  document.getElementById('r-ced-display').textContent = ced.toFixed(3);
+  document.getElementById('r-doa-display').textContent = doa;
+
+  // Headline
+  const hl=document.getElementById('r-headline');
+  if(totalW>5000)      hl.innerHTML='HIGH DEMAND<br>HOME SYSTEM';
+  else if(totalW>2000) hl.innerHTML='MODERATE LOAD<br>CONFIGURED';
+  else if(totalW>0)    hl.innerHTML='LIGHT LOAD<br>CONFIGURED';
+  else                 hl.innerHTML='NO LOAD<br>SELECTED';
+  document.getElementById('r-sub').textContent =
+    `CED: ${ced.toFixed(2)} kWh/day | Running: ${totalW.toLocaleString()}W | Peak surge: ${peakW.toLocaleString()}W`;
+
+  // Default inverter selection
+  selInv('hybrid');
+
+  // Battery + Solar + Cable
+  updateBattery();
+  updateSolar();
+
+  // Tips
+  document.getElementById('tipList').innerHTML = [
+    {icon:'📐',title:'Always use CED — not just kWh output',body:'The CED formula adds inverter input losses (÷0.9) and standby consumption. Using raw output energy will undersize your system.'},
+    {icon:'❄️',title:'Inverter AC cuts standby losses',body:'Inverter-type ACs consume 40–60% less than fixed-speed. They also reduce CED significantly, shrinking battery and panel requirements.'},
+    {icon:'🔋',title:'Lead-acid DoD must not exceed 50%',body:'Standard practice: assume 50% DoD for lead-acid, 90% for lithium. Over-discharging lead-acid halves battery life within months in Nigerian heat.'},
+    {icon:'☀️',title:'Use 4.5–5 PSH for Southern Nigeria',body:'Lagos/Benin average 4.5 peak sun hours. Northern states (Kano, Maiduguri) get 5.5–6.5 hrs. Correct PSH directly affects panel count.'},
+    {icon:'🔌',title:'Never overload the MPPT controller',body:'Size MPPT for at least I_parallel × Isc × 1.25. Undersized MPPTs clip solar output and overheat.'},
+    {icon:'🌡️',title:'Derate cable in conduit or buried runs',body:'NEC/IEC cable ratings assume free-air. In conduit or buried, derate by 0.7–0.8×. Nigeria\'s heat means ambient derating applies year-round.'},
+  ].map(t=>`<div class="tip"><div class="tip-icon">${t.icon}</div><div><strong>${t.title}</strong><span>${t.body}</span></div></div>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// INVERTER TYPE
+// ─────────────────────────────────────────────────────────────────────────
+function selInv(type) {
+  selInvType=type;
+  ['pure','modified','hybrid'].forEach(t=>document.getElementById('inv-'+t).classList.remove('selected'));
+  document.getElementById('inv-'+type).classList.add('selected');
+  const {peakW} = calcLoad();
+  const va = Math.ceil(peakW*1.25/100)*100;
+  const msgs={
+    pure:`<strong>Pure Sine Wave — minimum ${va.toLocaleString()} VA</strong><br>
+      Produces grid-quality AC. Required for air conditioners, refrigerators, motor pumps, medical equipment, and all electronics.
+      Efficiency ≥90%. Recommended brands in Nigeria: Victron, Growatt, Felicity, Prag. Add 25% headroom above peak surge.`,
+    modified:`<strong>Modified Sine Wave — minimum ${va.toLocaleString()} VA</strong><br>
+      Low-cost option. Suitable for resistive loads only: bulbs, fans, phone chargers, basic heaters.
+      <span style="color:var(--red)">⚠ Damages or overheats AC motors, compressors, transformers, variable-speed drives, and most electronics. Not recommended for Nigerian home backup.</span>`,
+    hybrid:`<strong>Hybrid Inverter — minimum ${va.toLocaleString()} VA</strong><br>
+      Combines MPPT solar charge controller + grid charger + pure sine wave inverter in one unit. Best choice for Nigerian solar installations.
+      Priority: Solar → Battery → Grid. Ensure inverter PV input voltage window (e.g. 90–450V) covers your panel string voltage.`
+  };
+  document.getElementById('inv-detail-text').innerHTML=msgs[type];
+  document.getElementById('r-inv-label').textContent = type==='hybrid'?'Hybrid (Solar+Battery+Grid)':type==='pure'?'Pure Sine Wave':'Modified Sine Wave';
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// BATTERY BANK — Battery Capacity Formula
+// Battery Capacity (Ah) = (CED × DoA) / (System Voltage × DoD)
+// ─────────────────────────────────────────────────────────────────────────
+function updateBattery() {
+  const {totalW, ced} = calcLoad();
+  const battType  = document.getElementById('battType').value;
+  const battV     = parseInt(document.getElementById('battV').value)||24;
+  const unitAh    = parseInt(document.getElementById('battUnitAh').value)||200;
+  const dod       = parseInt(document.getElementById('dodSlider').value)/100;
+  const doa       = parseInt(document.getElementById('doa').value)||1;
+
+  const typeInfo = {
+    lead:    {dodRec:'50%',  cycles:'200–500',  label:'Flooded Lead-Acid', warn:0.60},
+    agm:     {dodRec:'60%',  cycles:'400–600',  label:'AGM Sealed',        warn:0.65},
+    gel:     {dodRec:'60%',  cycles:'500–800',  label:'Gel Battery',       warn:0.65},
+    lithium: {dodRec:'80–90%',cycles:'2000–5000',label:'LiFePO₄',          warn:0.95},
+  };
+  const info = typeInfo[battType];
+  const dodWarn = dod > info.warn;
+  document.getElementById('dodRec').textContent = info.dodRec+' — '+info.label+(dodWarn?' ⚠ Too high!':'');
+  document.getElementById('dodRec').style.color = dodWarn ? 'var(--red)' : 'var(--green)';
+
+  // Battery Capacity (Ah) = (CED × DoA) / (System Voltage × DoD)
+  const cedWh = ced * 1000;  // convert kWh → Wh
+  const ahRequired = (ced * doa) / (battV/1000 * dod);
+  // Simplified: Ah = (CED_kWh × DoA × 1000) / (battV × DoD)
+  const ahReq = Math.ceil((ced * doa * 1000) / (battV * dod));
+
+  // Number of batteries
+  const UNIT_V = 12; // standard 12V battery unit
+  const seriesN   = Math.max(1, Math.ceil(battV / UNIT_V)); // in series for voltage
+  const parallelN = Math.ceil(ahReq / unitAh); // in parallel for capacity (per string)
+  const totalBatt = seriesN * parallelN;
+
+  // Usable capacity
+  const totalAh   = unitAh * parallelN;
+  const usableWh  = totalAh * battV * dod;
+  const backupHrs = totalW > 0 ? (usableWh/totalW).toFixed(1) : '—';
+
+  document.getElementById('r-ah-req').textContent   = ahReq+' Ah';
+  document.getElementById('r-batt-n').textContent   = totalBatt+' units';
+  document.getElementById('r-batt-usable').textContent = (usableWh/1000).toFixed(2)+' kWh';
+  document.getElementById('r-batt-hrs').textContent = backupHrs+'h';
+
+  // Connection type
+  let badge, conn, note;
+  if(seriesN===1 && parallelN===1) {
+    badge='badge-parallel'; conn='Single Battery';
+    note='One battery unit only. No interconnection needed.';
+  } else if(seriesN>1 && parallelN===1) {
+    badge='badge-series'; conn=`${seriesN}S × 1P — Series`;
+    note=`Connect ${seriesN} batteries in SERIES (+ to − chain) to reach ${battV}V. Total: ${unitAh} Ah @ ${battV}V.`;
+  } else if(seriesN===1 && parallelN>1) {
+    badge='badge-parallel'; conn=`1S × ${parallelN}P — Parallel`;
+    note=`Connect ${parallelN} batteries in PARALLEL (+ to +, − to −) to multiply capacity. Total: ${unitAh*parallelN} Ah @ ${battV}V.`;
+  } else {
+    badge='badge-sp'; conn=`${seriesN}S × ${parallelN}P — Series-Parallel`;
+    note=`Build ${parallelN} series strings of ${seriesN} batteries each → then connect strings in parallel via busbar. `+
+         `Total: ${totalBatt} batteries = ${unitAh*parallelN} Ah @ ${battV}V.`;
+  }
+
+  const connEl = document.getElementById('r-batt-conn');
+  connEl.className='badge '+badge;
+  connEl.textContent=conn;
+  const achievedV = seriesN * UNIT_V;
+  document.getElementById('r-batt-conn-note').textContent =
+    (achievedV !== battV)
+      ? `⚠ ${battV}V is not a multiple of 12V — ${seriesN} batteries in series gives ${achievedV}V, the nearest standard configuration.`
+      : '';
+  document.getElementById('r-batt-detail').innerHTML =
+    `<strong style="color:var(--text)">${note}</strong><br>
+    <span style="color:var(--muted);font-size:11px">
+    Formula: Ah = (CED × DoA × 1000) ÷ (${battV}V × ${Math.round(dod*100)}% DoD)
+     = (${ced.toFixed(3)} × ${doa} × 1000) ÷ (${battV} × ${dod}) = <strong>${ahReq} Ah</strong><br>
+    Battery: ${info.label} | Cycle life: ${info.cycles} | Unit: ${unitAh}Ah @ 12V | System: ${battV}V
+    </span>`;
+
+  // Also refresh solar to get updated MPPT
+  updateSolar();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// SOLAR PANELS — Panel Sizing Formula
+// Panel Energy = CED / PR
+// Panel Power  = Panel Energy / PSH
+// No. of Panels = Panel Power / Panel Watt Rating
+// ─────────────────────────────────────────────────────────────────────────
+function updateSolar() {
+  const {totalW, peakW, ced} = calcLoad();
+  const psh     = parseFloat(document.getElementById('psh').value)||4.5;
+  const pr      = parseFloat(document.getElementById('pr').value)||0.65;
+  const panelW  = parseFloat(document.getElementById('panelW').value)||400;
+  const panelVoc= parseFloat(document.getElementById('panelVoc').value)||41;
+  const panelIsc= parseFloat(document.getElementById('panelIsc').value)||11;
+  const battV   = parseInt(document.getElementById('battV').value)||24;
+
+  // Formulas
+  const panelEnergy = ced / pr;                        // kWh
+  const panelPowerKw = panelEnergy / psh;              // kW
+  const panelPowerW  = panelPowerKw * 1000;            // W
+  const nPanels = Math.max(1, Math.ceil(panelPowerW / panelW));
+
+  document.getElementById('r-panel-energy').textContent = panelEnergy.toFixed(3);
+  document.getElementById('r-panel-power').textContent  = Math.round(panelPowerW).toLocaleString()+' W';
+  document.getElementById('r-panel-n').textContent      = nPanels;
+  document.getElementById('r-panel-w-label').textContent= `@ ${panelW}W each`;
+
+  // Series / Parallel layout
+  // Target string voltage ≈ 1.5–3× battery voltage (sweet spot for MPPT)
+  const targetStrV = battV * 2.5;
+  const seriesPS   = Math.max(1, Math.round(targetStrV / panelVoc));
+  const parallelPS = Math.max(1, Math.ceil(nPanels / seriesPS));
+  const totalP     = seriesPS * parallelPS;
+  const strV       = (seriesPS * panelVoc).toFixed(1);
+  const strI       = (parallelPS * panelIsc).toFixed(1);
+
+  // MPPT: I_parallel × Isc × 1.25
+  const mpptA = Math.ceil(parallelPS * panelIsc * 1.25 / 5)*5;
+  document.getElementById('r-mppt').textContent = mpptA+'A';
+
+  let conn;
+  if(seriesPS===1&&parallelPS===1)      conn='Single Panel';
+  else if(seriesPS>1&&parallelPS===1)   conn=`${seriesPS}S × 1P`;
+  else if(seriesPS===1&&parallelPS>1)   conn=`1S × ${parallelPS}P`;
+  else                                   conn=`${seriesPS}S × ${parallelPS}P`;
+
+  document.getElementById('r-panel-conn').textContent     = conn;
+  document.getElementById('r-panel-conn-sub').textContent =
+    seriesPS>1||parallelPS>1 ? `${seriesPS} series × ${parallelPS} parallel` : 'No interconnection';
+
+  document.getElementById('r-solar-detail').innerHTML = `
+    <div class="f-title">Panel Sizing — Step-by-Step</div>
+    <div>① Panel Energy = CED ÷ PR = <span class="f-eq">${ced.toFixed(3)} ÷ ${pr}</span> = <span class="f-eq">${panelEnergy.toFixed(3)} kWh</span></div>
+    <div>② Panel Power = Panel Energy ÷ PSH = <span class="f-eq">${panelEnergy.toFixed(3)} ÷ ${psh}</span> = <span class="f-eq">${panelPowerKw.toFixed(3)} kW (${Math.round(panelPowerW)}W)</span></div>
+    <div>③ No. of Panels = Panel Power ÷ Panel Rating = <span class="f-eq">${Math.round(panelPowerW)}W ÷ ${panelW}W</span> = <span class="f-eq">${nPanels} panels</span> @ ${panelW}W each</div>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(245,166,35,.2)">
+      String voltage: ${strV}V (${seriesPS} × ${panelVoc}V) | Array current: ${strI}A (${parallelPS} × ${panelIsc}A) | Total array: ${totalP}×${panelW}W = ${(totalP*panelW).toLocaleString()}Wp<br>
+      MPPT minimum: <strong style="color:var(--accent)">${mpptA}A @ ${battV}V</strong> &nbsp;| &nbsp;Est. daily yield: <strong>${(totalP*panelW*psh*pr/1000).toFixed(2)} kWh</strong> (target CED: ${ced.toFixed(2)} kWh)
+    </div>
+    <div class="f-note">Performance Ratio (PR) accounts for temperature losses, wiring losses, shading, and inverter efficiency. Default = 65%.</div>
+  `;
+
+  // Refresh cable table
+  buildCables(acCurrent(totalW), breaker(totalW), battV, parallelPS, panelIsc, parseFloat(strV)||40);
+}
+
+function acCurrent(totalW) {
+  const v=parseInt(document.getElementById('acVolt').value)||220;
+  return totalW/v;
+}
+function breaker(totalW) {
+  const c=acCurrent(totalW);
+  const BREAKERS=[6,10,16,20,25,32,40,50,63,80,100,125];
+  return BREAKERS.find(b=>b>=c*1.25)||125;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// CABLE SIZING — IEC 60228 copper, free air, 70°C
+// Diameter = √(CSA × 4 / π) for round conductor reference
+// ─────────────────────────────────────────────────────────────────────────
+/*
+ CSA(mm²) | Conductor Ø(mm) | Max A free air | Max A in conduit
+   1.5    |    1.38         |     15A        |     12A
+   2.5    |    1.78         |     20A        |     16A
+   4      |    2.26         |     27A        |     21A
+   6      |    2.76         |     34A        |     27A
+   10     |    3.57         |     46A        |     37A
+   16     |    4.51         |     61A        |     48A
+   25     |    5.64         |     80A        |     63A
+   35     |    6.68         |     99A        |     78A
+   50     |    7.98         |    119A        |     94A
+   70     |    9.44         |    150A        |    118A
+   95     |   10.98         |    182A        |    143A
+  120     |   12.36         |    210A        |    165A
+*/
+const CABLES=[
+  {csa:1.5,  dia:1.38, freeA:15},
+  {csa:2.5,  dia:1.78, freeA:20},
+  {csa:4,    dia:2.26, freeA:27},
+  {csa:6,    dia:2.76, freeA:34},
+  {csa:10,   dia:3.57, freeA:46},
+  {csa:16,   dia:4.51, freeA:61},
+  {csa:25,   dia:5.64, freeA:80},
+  {csa:35,   dia:6.68, freeA:99},
+  {csa:50,   dia:7.98, freeA:119},
+  {csa:70,   dia:9.44, freeA:150},
+  {csa:95,   dia:10.98,freeA:182},
+  {csa:120,  dia:12.36,freeA:210},
+];
+
+function pickCable(amps, sf=1.25) {
+  const needed=amps*sf;
+  return CABLES.find(c=>c.freeA>=needed)||CABLES[CABLES.length-1];
+}
+
+function buildCables(acA, bkr, battV, parallelPS, panelIsc, strV) {
+  const {totalW,peakW} = calcLoad();
+  const acVolt = parseInt(document.getElementById('acVolt').value)||220;
+  const invDcA = (peakW*1.25)/battV;
+  const pvA    = parallelPS * panelIsc;
+
+  const rows=[
+    {circuit:'AC Mains — Grid → Distribution Board',  A:acA,            note:'Armoured SWA cable for outdoor/underground'},
+    {circuit:'AC Output — Inverter → Load Panel',     A:peakW/acVolt,   note:'Flexible stranded copper; as short as possible'},
+    {circuit:'DC — Battery Bank → Inverter',          A:invDcA,         note:'⚠ High DC current. Shortest possible run. Use flexible welding/solar cable. Fuse at battery end.'},
+    {circuit:'Battery Bank Interconnects',            A:invDcA*0.85,    note:'Between battery units. Match gauge to bank cable.'},
+    {circuit:'PV Array → MPPT Controller',            A:pvA,            note:`${parallelPS} parallel string(s) × ${panelIsc}A Isc. Use UV-resistant solar PV cable (PV1-F).`},
+    {circuit:'MPPT Controller → Battery Bank',        A:pvA*1.1,        note:'Short run preferred. Fuse both ends.'},
+    {circuit:'Branch Socket Circuits (ring/radial)',  A:16,             note:'2.5mm² minimum per BS 7671 / NEC. Each circuit max 16A.'},
+    {circuit:'Lighting Circuit',                      A:6,              note:'1.5mm² minimum. Dedicated ring per floor.'},
+  ];
+
+  document.getElementById('cableBody').innerHTML = rows.map((r,i)=>{
+    const c=pickCable(r.A);
+    return `<tr class="${i%2===0?'hl':''}">
+      <td>${r.circuit}</td>
+      <td class="mono">${r.A.toFixed(1)}A</td>
+      <td class="mono">${c.csa} mm²</td>
+      <td class="mono">Ø ${c.dia} mm</td>
+      <td style="color:var(--muted);font-size:10px">${r.note}</td>
+    </tr>`;
+  }).join('');
+}
+
+function restartCalc() {
+  selAp={};
+  APPLIANCES=[...BASE_AP];
+  customCtr=0;
+  updateSidebar();
+  renderAp('all');
+  goTo(1);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PSH preset handling — region select fills the editable number input
+// ─────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────
+// THEME TOGGLE — dark / light mode
+// ─────────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('themeBtn').innerHTML =
+    isLight
+      ? '<span class="theme-toggle-icon">☀️</span><span id="themeLabel">Light</span>'
+      : '<span class="theme-toggle-icon">🌙</span><span id="themeLabel">Dark</span>';
+  localStorage.setItem('wattmap-theme', isLight ? 'light' : 'dark');
+}
+
+// Apply saved theme on load
+(function(){
+  if(localStorage.getItem('wattmap-theme') === 'light') {
+    document.body.classList.add('light');
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const btn = document.getElementById('themeBtn');
+      if(btn) btn.innerHTML = '<span class="theme-toggle-icon">☀️</span><span id="themeLabel">Light</span>';
+    });
+  }
+})();
+
+function applyPshPreset() {
+  const region = document.getElementById('pshRegion').value;
+  if(region !== 'custom') {
+    document.getElementById('psh').value = region;
+  }
+}
+
+function applyBattVPreset() {
+  const v = document.getElementById('battVPreset').value;
+  if(v !== 'custom') {
+    document.getElementById('battV').value = v;
+    updateBattery();
+  }
+}
+
+function applyBattUnitAhPreset() {
+  const v = document.getElementById('battUnitAhPreset').value;
+  if(v !== 'custom') {
+    document.getElementById('battUnitAh').value = v;
+    updateBattery();
+  }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+renderAp('all');
+</script>
+</body>
+</html>
+
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
